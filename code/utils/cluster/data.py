@@ -152,7 +152,7 @@ def cluster_create_dataloaders(config):
   print("Making datasets with %s and %s" % (dataset_class, target_transform))
   sys.stdout.flush()
 
-  dataloaders = \
+  dataloaders, dataset_imgs, flatten_dataset_imgs, flatten_dataset_loaders = \
     _create_dataloaders(config, dataset_class, tf1, tf2,
                         partitions=config.train_partitions,
                         target_transform=target_transform)
@@ -167,7 +167,7 @@ def cluster_create_dataloaders(config):
                            partitions=config.mapping_test_partitions,
                            target_transform=target_transform)
 
-  return dataloaders, mapping_assignment_dataloader, mapping_test_dataloader
+  return dataloaders, dataset_imgs, flatten_dataset_imgs, flatten_dataset_loaders, mapping_assignment_dataloader, mapping_test_dataloader
 
 
 # Other generic data creation functions ----------------------------------------
@@ -290,6 +290,7 @@ def _create_dataloaders(config, dataset_class, tf1, tf2,
     assert (isinstance(train_dataloader.sampler,
                        torch.utils.data.sampler.SequentialSampler))
   dataloaders = [train_dataloader]
+  dataset_imgs = [train_imgs]
 
   for d_i in xrange(config.num_dataloaders):
     print("Creating auxiliary dataloader ind %d out of %d time %s" %
@@ -329,13 +330,21 @@ def _create_dataloaders(config, dataset_class, tf1, tf2,
                          torch.utils.data.sampler.SequentialSampler))
     assert (len(train_dataloader) == len(train_tf_dataloader))
     dataloaders.append(train_tf_dataloader)
+    dataset_imgs.append(train_imgs_tf)
 
   num_train_batches = len(dataloaders[0])
   print("Length of datasets vector %d" % len(dataloaders))
   print("Number of batches per epoch: %d" % num_train_batches)
   sys.stdout.flush()
 
-  return dataloaders
+  flatten_dataset_imgs = ConcatDataset(dataset_imgs)
+  flatten_dataloaders = torch.utils.data.DataLoader(
+    flatten_dataset_imgs,
+    batch_size=config.batch_size/config.num_dataloaders,
+    num_workers=0,
+  )
+
+  return dataloaders, dataset_imgs, flatten_dataset_imgs, flatten_dataloaders
 
 
 def _create_mapping_loader(config, dataset_class, tf3, partitions,
