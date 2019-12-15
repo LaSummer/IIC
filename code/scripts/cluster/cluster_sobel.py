@@ -20,7 +20,7 @@ from code.utils.cluster.transforms import sobel_process
 from code.utils.cluster.data import cluster_create_dataloaders
 from code.utils.cluster.IID_losses import IID_loss
 from code.utils.cluster.cluster_eval import cluster_eval
-
+import code.utils.cluster.kmeans_clustering as kclustering
 """
   Semisupervised overclustering ("IIC+" = "IID+")
   Note network is trained entirely unsupervised, as labels are found for 
@@ -188,6 +188,7 @@ else:
 fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 
 # Train ------------------------------------------------------------------------
+deepcluster = kclustering.Kmeans(config.output_k)
 
 for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
@@ -202,6 +203,19 @@ for e_i in xrange(next_epoch, config.num_epochs):
   avg_loss = 0.
   avg_loss_no_lamb = 0.
   avg_loss_count = 0
+  # generate and assign pseudo labels for the whole dataset (including origin and transformed dataset)
+
+  # 1. get kmeans_use_feature:
+  features = compute_features(dataloader, net, N)
+
+  # 2. cluster the features using kmeans
+  print('Cluster the kmeans features')
+  kclustering_loss = deepcluster.cluster(features, verbose=args.verbose)
+
+  # 3. assign pseudo labels
+  print('Assign pseudo labels')
+  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset.imgs)
+
 
   for tup in itertools.izip(*iterators):
     net.module.zero_grad()
@@ -347,3 +361,23 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   if config.test_code:
     exit(0)
+
+
+def compute_features(dataloader, net, N):
+    # discard the label information in the dataloader
+    with torch.no_grad():
+        for i, (input_tensor, _)  in enumerate(dataloader):
+            input_var = torch.autograd.Variable(input_tensor.cuda())
+            #input_var = torch.cat(input_tensor).cuda()
+            aux = net(input_var, kmeans_use_features=True,)[0].data.cpu().numpy()
+
+            if i == 0:
+                features = np.zeros((N, aux.shape[1]), dtype='float32')
+            aux = aux.astype('float32')
+            if i < len(dataloader) - 1:
+                features[i * args.batch: (i + 1) * args.batch] = aux
+            else:
+                # special treatment for final batch
+                features[i * args.batch:] = aux
+
+    return features
