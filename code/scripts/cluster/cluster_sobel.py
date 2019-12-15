@@ -191,7 +191,34 @@ fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 deepcluster = kclustering.Kmeans(config.output_k)
 
 def reconstruct(train_dataset):
-  return train_dataset
+  new_dataloaders = []
+  for _, dataset in enumerate(train_dataset):
+    new_dataloaders.append(
+      torch.utils.data.DataLoader(
+        dataset,
+        batch_size=config.dataloader_batch_sz,
+        # shuffle=shuffle,
+        # num_workers=0,
+        # drop_last=False
+      )
+    )
+  return new_dataloaders
+
+def reconstruct_v2(train_dataset):
+  new_dataloaders = []
+  n = config.num_dataloaders + 1
+  subset_size = len(train_dataset) / n
+  for i in range(n):
+    indexes = list(range(i*subset_size, (i+1)*subset_size))
+    subset = torch.utils.data.Subset(train_dataset, indexes)
+    new_dataloaders.append(torch.utils.data.DataLoader(
+      subset,
+      batch_size=config.dataloader_batch_sz,
+      # shuffle=shuffle,
+      # num_workers=0,
+      # drop_last=False
+    ))
+  return new_dataloaders
 
 for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
@@ -209,7 +236,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   # generate and assign pseudo labels for the whole dataset (including origin and transformed dataset)
 
   # 1. get kmeans_use_feature:
-  features = compute_features(dataloader, net, N)
+  features = compute_features(flatten_dataloaders, net, N)
 
   # 2. cluster the features using kmeans
   print('Cluster the kmeans features')
@@ -217,10 +244,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   # 3. assign pseudo labels
   print('Assign pseudo labels')
-  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset.imgs)
+  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset_imgs)
 
-
-  dataloaders = reconstruct(train_dataset)
+  dataloaders = reconstruct_v2(train_dataset)
 
   for tup in itertools.izip(*iterators):
     net.module.zero_grad()
