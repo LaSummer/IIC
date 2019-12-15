@@ -128,7 +128,7 @@ def cluster_create_dataloaders(config):
     tf1, tf2, tf3 = sobel_make_transforms(config)
 
   elif config.dataset == "STL10":
-    config.train_partitions = ["train+unlabeled"]
+    config.train_partitions = ["unlabeled"]
     config.mapping_assignment_partitions = ["train"]
     config.mapping_test_partitions = ["test"]
 
