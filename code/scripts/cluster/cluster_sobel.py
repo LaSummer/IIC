@@ -192,6 +192,34 @@ deepcluster = kclustering.Kmeans(config.output_k)
 
 def reconstruct(train_dataset):
   return train_dataset
+  new_dataloaders = []
+  for _, dataset in enumerate(train_dataset):
+    new_dataloaders.append(
+      torch.utils.data.DataLoader(
+        dataset,
+        batch_size=config.dataloader_batch_sz,
+        # shuffle=shuffle,
+        # num_workers=0,
+        # drop_last=False
+      )
+    )
+  return new_dataloaders
+
+def reconstruct_v2(train_dataset):
+  new_dataloaders = []
+  n = config.num_dataloaders + 1
+  subset_size = len(train_dataset) / n
+  for i in range(n):
+    indexes = list(range(i*subset_size, (i+1)*subset_size))
+    subset = torch.utils.data.Subset(train_dataset, indexes)
+    new_dataloaders.append(torch.utils.data.DataLoader(
+      subset,
+      batch_size=config.dataloader_batch_sz,
+      # shuffle=shuffle,
+      # num_workers=0,
+      # drop_last=False
+    ))
+  return new_dataloaders
 
 for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
@@ -209,16 +237,15 @@ for e_i in xrange(next_epoch, config.num_epochs):
   # generate and assign pseudo labels for the whole dataset (including origin and transformed dataset)
 
   # 1. get kmeans_use_feature:
-  features = compute_features(dataloader, net, N)
+  features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
 
   # 2. cluster the features using kmeans
   print('Cluster the kmeans features')
-  kclustering_loss = deepcluster.cluster(features, verbose=args.verbose)
+  kclustering_loss = deepcluster.cluster(features, verbose=True)
 
   # 3. assign pseudo labels
   print('Assign pseudo labels')
-  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset.imgs)
-
+  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset_imgs) #TODO: change type of dataset_imgs
 
   dataloaders = reconstruct(train_dataset)
 
@@ -368,21 +395,65 @@ for e_i in xrange(next_epoch, config.num_epochs):
     exit(0)
 
 
-def compute_features(dataloader, net, N):
+def compute_features(dataloaders, net, N):
     # discard the label information in the dataloader
-    with torch.no_grad():
-        for i, (input_tensor, _)  in enumerate(dataloader):
-            input_var = torch.autograd.Variable(input_tensor.cuda())
-            #input_var = torch.cat(input_tensor).cuda()
-            aux = net(input_var, kmeans_use_features=True,)[0].data.cpu().numpy()
+    # with torch.no_grad():
+    #     for i, (input_tensor, _)  in enumerate(dataloader):
+    #         input_var = torch.autograd.Variable(input_tensor.cuda())
+    #         #input_var = torch.cat(input_tensor).cuda()
+    #         aux = net(input_var, kmeans_use_features=True,)[0].data.cpu().numpy()
 
-            if i == 0:
-                features = np.zeros((N, aux.shape[1]), dtype='float32')
-            aux = aux.astype('float32')
-            if i < len(dataloader) - 1:
-                features[i * args.batch: (i + 1) * args.batch] = aux
-            else:
-                # special treatment for final batch
-                features[i * args.batch:] = aux
+    #         if i == 0:
+    #             features = np.zeros((N, aux.shape[1]), dtype='float32')
+    #         aux = aux.astype('float32')
+    #         if i < len(dataloader) - 1:
+    #             features[i * args.batch: (i + 1) * args.batch] = aux
+    #         else:
+    #             # special treatment for final batch
+    #             features[i * args.batch:] = aux
 
-    return features
+    # return features
+    net.eval()
+    iterators = (d for d in dataloaders)
+    i =  0
+    print("LENGTH OF DATASET: ", N)
+    for tup in itertools.izip(*iterators):
+      imgs_curr = tup[0][0].cuda()  # always the first
+      imgs_tf_1 = tup[1][0].cuda()
+      imgs_tf_2 = tup[2][0].cuda()
+      curr_batch_sz = imgs_curr.size(0)
+
+      imgs_curr = sobel_process(imgs_curr, config.include_rgb)
+      imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
+      imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
+
+      x_outs = net(imgs_curr, kmeans_use_features=True,)[0].data.cpu().numpy()
+      x_tf_1_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
+      x_tf_2_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
+      if i == 0:
+        features1 = np.zeros((N/3, x_outs.shape[1]), dtype='float32')
+        features2 = np.zeros((N/3, x_tf_1_outs.shape[1]), dtype='float32')
+        features3 = np.zeros((N/3, x_tf_2_outs.shape[1]), dtype='float32')
+      x_outs = x_outs.astype('float32')
+      x_tf_1_outs = x_tf_1_outs.astype('float32')
+      x_tf_2_outs = x_tf_2_outs.astype('float32')
+      if curr_batch_sz == config.dataloader_batch_sz:
+          features1[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_outs
+          features2[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_1_outs
+          features3[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_2_outs
+      else:
+          # special treatment for final batch
+          features1[i * curr_batch_sz:] = x_outs
+          features2[i * curr_batch_sz:] = x_tf_1_outs
+          features3[i * curr_batch_sz:] = x_tf_2_outs
+      i += 1
+    
+    net.train()
+    return np.concatenate((features1, features2, features3))
+      
+
+
+        
+
+
+
