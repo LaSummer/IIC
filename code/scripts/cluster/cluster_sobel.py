@@ -134,7 +134,7 @@ else:
 
 # Model ------------------------------------------------------------------------
 
-dataloaders, mapping_assignment_dataloader, mapping_test_dataloader = \
+dataloaders, dataset_imgs, flatten_dataset_imgs, flatten_dataloaders, mapping_assignment_dataloader, mapping_test_dataloader = \
   cluster_create_dataloaders(config)
 
 net = archs.__dict__[config.arch](config)
@@ -189,6 +189,9 @@ fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 
 # Train ------------------------------------------------------------------------
 
+def reconstruct(train_dataset):
+  return train_dataset
+
 for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
   sys.stdout.flush()
@@ -202,6 +205,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
   avg_loss = 0.
   avg_loss_no_lamb = 0.
   avg_loss_count = 0
+
+  dataloaders = reconstruct(train_dataset)
 
   for tup in itertools.izip(*iterators):
     net.module.zero_grad()
