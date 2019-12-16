@@ -366,11 +366,11 @@ for e_i in xrange(next_epoch, config.num_epochs):
       if avg_loss_batch is None:
         avg_loss_batch = loss
         avg_loss_no_lamb_batch = loss_no_lamb
-        avg_kmeans_loss = avg_kmeans_loss
+        avg_kmeans_loss = kloss
       else:
         avg_loss_batch += loss
         avg_loss_no_lamb_batch += loss_no_lamb
-        avg_kmeans_loss += avg_kmeans_loss
+        avg_kmeans_loss += kloss
 
     avg_loss_batch /= config.num_sub_heads
     avg_loss_no_lamb_batch /= config.num_sub_heads
