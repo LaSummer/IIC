@@ -9,7 +9,9 @@ from code.utils.cluster.transforms import sobel_process
 def get_dlen(net_features, dataloader, include_rgb=None,
              penultimate_features=False):
   for i, (imgs, _) in enumerate(dataloader):
-    imgs = Variable(sobel_process(imgs.cuda(), include_rgb)).cpu()
+    net_features.cuda()
+    net_features.eval()
+    imgs = Variable(sobel_process(imgs.cuda(), include_rgb)).cuda()
     x_features = net_features(imgs, trunk_features=True,
                               penultimate_features=penultimate_features)
 

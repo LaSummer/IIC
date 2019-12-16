@@ -170,14 +170,14 @@ def main():
     print("best net params loaded")
     sys.stdout.flush()
 
-  #dlen = get_dlen(net_features, train_loader,
-  #                include_rgb=old_config.include_rgb,
-  #                penultimate_features=config.penultimate_features)
-  #print("dlen: %d" % dlen)
-  #sys.stdout.flush()
+  dlen = get_dlen(net_features, train_loader,
+                 include_rgb=old_config.include_rgb,
+                 penultimate_features=config.penultimate_features)
+  print("dlen: %d" % dlen)
+  sys.stdout.flush()
 
   assert (config.arch == "SupHead5")
-  net = SupHead5(net_features, dlen=512, gt_k=old_config.gt_k)
+  net = SupHead5(net_features, dlen=dlen, gt_k=old_config.gt_k)
 
   if config.restart:
     print("restarting from latest net")
