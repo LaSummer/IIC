@@ -428,15 +428,19 @@ for e_i in xrange(next_epoch, config.num_epochs):
       break
 
   # Eval -----------------------------------------------------------------------
-  try:
-    nmi = normalized_mutual_info_score(
-        kclustering.arrange_clustering(deepcluster.images_lists),
-        kclustering.arrange_clustering(cluster_log.data[-1])
-    )
-    print('NMI against previous assignment: {0:.3f}'.format(nmi))
-  except IndexError:
-    print('NMI no previous assignment')
-    pass
+  if e_i % 2 == 0:
+    try:
+      nmi = normalized_mutual_info_score(
+          kclustering.arrange_clustering(deepcluster.images_lists),
+          kclustering.arrange_clustering(cluster_log.data[-1])
+      )
+      print('NMI against previous assignment: {0:.3f}'.format(nmi))
+    except IndexError:
+      print('NMI no previous assignment')
+      pass
+  else:
+    print('NMI no messurement')
+
   avg_loss = float(avg_loss / avg_loss_count)
   avg_loss_no_lamb = float(avg_loss_no_lamb / avg_loss_count)
   avg_loss_kmean = float((avg_loss_kmean) / avg_loss_count)
