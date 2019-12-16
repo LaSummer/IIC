@@ -343,9 +343,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
     all_imgs_tf = all_imgs_tf[:curr_total_batch_sz, :, :, :]
     #all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), -1)
     #get pseudo labels
-    imgs_curr_target = torch.IntTensor(pseudo_labels[(i-1)*config.dataloader_batch_sz:i*config.dataloader_batch_sz])
+    imgs_curr_target = torch.IntTensor(pseudo_labels[(itern-1)*config.dataloader_batch_sz:itern*config.dataloader_batch_sz])
     all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), -1)
-    if i == 1:
+    if itern == 1:
       print("varyfing all_imgs_target shape:", all_imgs_target.size())
 
     all_imgs = sobel_process(all_imgs, config.include_rgb)
