@@ -163,3 +163,12 @@ class ReassignedDataset(data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+def arrange_clustering(images_lists):
+    pseudolabels = []
+    image_indexes = []
+    for cluster, images in enumerate(images_lists):
+        image_indexes.extend(images)
+        pseudolabels.extend([cluster] * len(images))
+    indexes = np.argsort(image_indexes)
+    return np.asarray(pseudolabels)[indexes]

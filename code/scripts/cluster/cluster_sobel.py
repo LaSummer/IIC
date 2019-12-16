@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import faiss
 import torch.nn as nn
+from sklearn.metrics.cluster import normalized_mutual_info_score
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ from code.utils.cluster.data import cluster_create_dataloaders
 from code.utils.cluster.IID_losses import IID_loss
 from code.utils.cluster.cluster_eval import cluster_eval
 import code.utils.cluster.kmeans_clustering as kclustering
+from code.utils.cluster.Logger import Logger
 """
   Semisupervised overclustering ("IIC+" = "IID+")
   Note network is trained entirely unsupervised, as labels are found for 
@@ -154,6 +156,7 @@ if config.restart:
     torch.load(os.path.join(config.out_dir, opt_name)))
   
 kmeans_crit = nn.CrossEntropyLoss().cuda()
+cluster_log = Logger(os.path.join(config.out_root, 'clusters'))
 
 # Results ----------------------------------------------------------------------
 
@@ -404,7 +407,15 @@ for e_i in xrange(next_epoch, config.num_epochs):
       break
 
   # Eval -----------------------------------------------------------------------
-
+  try:
+    nmi = normalized_mutual_info_score(
+        kclustering.arrange_clustering(deepcluster.images_lists),
+        kclustering.arrange_clustering(cluster_log.data[-1])
+    )
+    print('NMI against previous assignment: {0:.3f}'.format(nmi))
+  except IndexError:
+    print('NMI no previous assignment')
+    pass
   avg_loss = float(avg_loss / avg_loss_count)
   avg_loss_no_lamb = float(avg_loss_no_lamb / avg_loss_count)
 
@@ -473,6 +484,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   if config.test_code:
     exit(0)
+
+  cluster_log.log(deepcluster.images_lists)
 
 
 
