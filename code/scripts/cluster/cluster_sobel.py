@@ -341,7 +341,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
     curr_total_batch_sz = curr_batch_sz * config.num_dataloaders
     all_imgs = all_imgs[:curr_total_batch_sz, :, :, :]
     all_imgs_tf = all_imgs_tf[:curr_total_batch_sz, :, :, :]
-    all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), 1)
+    all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), -1)
     if i == 1:
       print("varyfing all_imgs_target shape:", all_imgs_target.size())
 
