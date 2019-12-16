@@ -156,7 +156,9 @@ def main():
                                             shuffle=False,
                                             num_workers=0,
                                             drop_last=False)
-
+  
+  print("train and test dataloader created")
+  sys.stdout.flush()
   # Model ----------------------------------------------------------------------
 
   net_features = archs.__dict__[old_config.arch](old_config)
@@ -165,6 +167,8 @@ def main():
     model_path = os.path.join(old_config.out_dir, "best_net.pytorch")
     net_features.load_state_dict(
       torch.load(model_path, map_location=lambda storage, loc: storage))
+    print("best net params loaded")
+    sys.stdout.flush()
 
   dlen = get_dlen(net_features, train_loader,
                   include_rgb=old_config.include_rgb,
