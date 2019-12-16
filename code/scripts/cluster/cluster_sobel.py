@@ -298,7 +298,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset_imgs) #TODO: change type of dataset_imgs
 
   print("start reconstruct dataset:")
-  dataloaders = reconstruct([train_dataset, dataset_imgs[1], dataset_imgs[2]])
+  #dataloaders = reconstruct([train_dataset, dataset_imgs[1], dataset_imgs[2]])
 
   iterators = (d for d in dataloaders)
   
@@ -333,7 +333,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
       actual_batch_end = actual_batch_start + curr_batch_sz
       all_imgs[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_curr.cuda()
-      all_imgs_target[actual_batch_start:actual_batch_end] = imgs_curr_target.cuda()
+      all_imgs_target[actual_batch_start:actual_batch_end, :] = imgs_curr_target.cuda()
       all_imgs_tf[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_tf_curr.cuda()
 
