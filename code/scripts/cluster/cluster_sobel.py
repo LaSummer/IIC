@@ -359,7 +359,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
     avg_kmeans_loss = None 
     for i in xrange(config.num_sub_heads):
       loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i], lamb=config.lamb)
-      kloss = kmeans_crit(x_outs[i], all_imgs_tf)
+      kloss = kmeans_crit(x_outs[i], all_imgs_tf.long())
       if avg_loss_batch is None:
         avg_loss_batch = loss
         avg_loss_no_lamb_batch = loss_no_lamb
