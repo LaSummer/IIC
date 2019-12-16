@@ -111,11 +111,13 @@ def main():
   with open(reloaded_config_path, "rb") as config_f:
     old_config = pickle.load(config_f)
     assert (old_config.model_ind == config.old_model_ind)
+  print("config loaded")
+  sys.stdout.flush()
 
   if config.new_batch_sz == -1:
     config.new_batch_sz = old_config.batch_sz
 
-  fig, axarr = plt.subplots(2, sharex=False, figsize=(20, 20))
+  #fig, axarr = plt.subplots(2, sharex=False, figsize=(20, 20))
 
   # Data -----------------------------------------------------------------------
 
