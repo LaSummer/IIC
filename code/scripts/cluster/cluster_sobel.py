@@ -10,6 +10,7 @@ from datetime import datetime
 import matplotlib
 import numpy as np
 import torch
+import faiss
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -271,6 +272,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
   sys.stdout.flush()
 
   iterators = (d for d in dataloaders)
+
+  test_f = np.zeros((1000, 512), dtype='float32')
+  kclustering_loss = deepcluster.cluster(test_f, verbose=True)
 
   b_i = 0
   if e_i in config.lr_schedule:
