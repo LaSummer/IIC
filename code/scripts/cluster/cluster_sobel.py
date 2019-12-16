@@ -6,6 +6,7 @@ import os
 import pickle
 import sys
 from datetime import datetime
+import random
 
 import matplotlib
 import numpy as np
@@ -290,14 +291,17 @@ for e_i in xrange(next_epoch, config.num_epochs):
   # generate and assign pseudo labels for the whole dataset (including origin and transformed dataset)
 
   # 1. get kmeans_use_feature:
-  print('Start compute features:')
-  features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
-  #features = np.zeros((100000, 512), dtype='float32')
-  print("computed feature shape:", features.shape)
+  if e_i % 2 == 0:
+    print('Start compute features:')
+    features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
+    #features = np.zeros((100000, 512), dtype='float32')
+    print("computed feature shape:", features.shape)
 
-  # 2. cluster the features using kmeans
-  print('Cluster the kmeans features')
-  pseudo_labels = deepcluster.cluster(features, verbose=True)
+    # 2. cluster the features using kmeans
+    print('Cluster the kmeans features')
+    pseudo_labels = deepcluster.cluster(features, verbose=True)
+  else:
+    pseudo_labels = [random.randint(0,139) for i in range(100000)]
 
   # 3. assign pseudo labels
   #print('Assign pseudo labels')
@@ -327,7 +331,6 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     if itern == 1:
       print("varyfing tup[0][0] shape:", tup[0][0].size())
-      print("varyfing tup[0][1] shape:", tup[0][1].size())
 
     curr_batch_sz = imgs_curr.size(0)
     for d_i in xrange(config.num_dataloaders):
@@ -383,10 +386,16 @@ for e_i in xrange(next_epoch, config.num_epochs):
     avg_kmeans_loss /= config.num_sub_heads
 
     if ((b_i % 100) == 0) or (e_i == next_epoch):
-      print("Model ind %d epoch %d batch: %d avg loss %f avg loss no lamb %f avg kloss %f"
+      if e_i % 2 == 0:
+        print("Model ind %d epoch %d batch: %d avg loss %f avg loss no lamb %f avg kloss %f"
             "time %s" % \
             (config.model_ind, e_i, b_i, avg_loss_batch.item(),
              avg_loss_no_lamb_batch.item(), avg_kmeans_loss.item(), datetime.now()))
+      else:
+        print("Model ind %d epoch %d batch: %d avg loss %f avg loss no lamb %f"
+            "time %s" % \
+            (config.model_ind, e_i, b_i, avg_loss_batch.item(),
+             avg_loss_no_lamb_batch.item(), datetime.now()))
       sys.stdout.flush()
 
     if not np.isfinite(avg_loss_batch.item()):
@@ -395,15 +404,19 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     avg_loss += avg_loss_batch.item()
     avg_loss_no_lamb += avg_loss_no_lamb_batch.item()
-    avg_loss_kmean += avg_kmeans_loss.item()
+    if e_i % 2 == 0:
+      avg_loss_kmean += avg_kmeans_loss.item()
     avg_loss_count += 1
 
-    if avg_loss_batch.item() <= -0.1 and avg_loss_batch.item() >= -1:
-      total_loss = avg_loss_batch + 0.005*avg_kmeans_loss
-    elif avg_loss_batch.item() > -0.1:
-      total_loss = avg_loss_batch
+    if e_i % 2 == 0:
+      if avg_loss_batch.item() <= -0.1 and avg_loss_batch.item() >= -1:
+        total_loss = avg_loss_batch + 0.005*avg_kmeans_loss
+      elif avg_loss_batch.item() > -0.1:
+        total_loss = avg_loss_batch
+      else:
+        total_loss = avg_loss_batch + 0.05*avg_kmeans_loss
     else:
-      total_loss = avg_loss_batch + 0.05*avg_kmeans_loss
+      total_loss = avg_loss_batch
     #avg_loss_batch.backward()
     
     total_loss.backward()
@@ -430,7 +443,12 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   config.epoch_loss.append(avg_loss)
   config.epoch_loss_no_lamb.append(avg_loss_no_lamb)
-  config.epoch_loss_kmean.append(avg_loss_kmean)
+  if e_i % 2 == 0:
+    config.epoch_loss_kmean.append(avg_loss_kmean)
+  elif e_i != 1:
+    config.epoch_loss_kmean.append(config.epoch_loss_kmean[-1])
+  else:
+    config.epoch_loss_kmean.append(0)
 
   is_best = cluster_eval(config, net,
                          mapping_assignment_dataloader=mapping_assignment_dataloader,
@@ -499,7 +517,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
   if config.test_code:
     exit(0)
 
-  cluster_log.log(deepcluster.images_lists)
+  if e_i % 2 == 0:
+    cluster_log.log(deepcluster.images_lists)
 
 
 
