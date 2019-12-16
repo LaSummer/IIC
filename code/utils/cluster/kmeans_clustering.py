@@ -5,6 +5,7 @@ import time
 import torchvision.transforms as transforms
 import torch
 import torch.utils.data as data
+import random
 
 
 class Kmeans(object):
@@ -23,8 +24,11 @@ class Kmeans(object):
 
         # cluster the data
         #I, loss = run_kmeans(xb, self.k, verbose)
-        kmeans = KMeans(n_clusters=self.k).fit(data)
-        flat_predictions = kmeans.labels_
+        #kmeans = KMeans(n_clusters=self.k).fit(data)
+        #flat_predictions = kmeans.labels_
+
+        # pseudo clustering for debug
+        flat_predictions = [random.randint(0,99) for i in range(100000)]
         self.images_lists = [[] for i in range(self.k)]
         for i in range(len(data)):
             self.images_lists[flat_predictions[i]].append(i)
@@ -104,13 +108,11 @@ def cluster_assign(images_lists, dataset):
                                                      labels
     """
     assert images_lists is not None
-    pseudolabels = [[], [], []]
-    image_indexes = [[], [], []]
-    N = 100000
+    pseudolabels = []
+    image_indexes = []
     for cluster, images in enumerate(images_lists):
-        for img_idx in images:
-            image_indexes[img_idx/N].append(img_idx)
-            pseudolabels[img_idx/N].append(cluster)
+        image_indexes.extend(images)
+        pseudolabels.extend([cluster]*len(images))
 
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
@@ -119,7 +121,7 @@ def cluster_assign(images_lists, dataset):
     #                         transforms.ToTensor(),
     #                         normalize])
 
-    return ReassignedDataset(image_indexes[0], pseudolabels[0], dataset[0]), ReassignedDataset(image_indexes[1], pseudolabels[1], dataset[1]), ReassignedDataset(image_indexes[2], pseudolabels[2], dataset[2]) 
+    return ReassignedDataset(image_indexes, pseudolabels, dataset[0]) 
 
 class ReassignedDataset(data.Dataset):
     """A dataset where the new images labels are given in argument.
@@ -133,6 +135,7 @@ class ReassignedDataset(data.Dataset):
     """
 
     def __init__(self, image_indexes, pseudolabels, dataset, transform=None):
+        print(dataset)
         self.imgs = self.make_dataset(image_indexes, pseudolabels, dataset)
         self.transform = transform
 
