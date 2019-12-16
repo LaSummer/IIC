@@ -237,8 +237,8 @@ def compute_features(dataloaders, net, N):
       curr_batch_sz = imgs_curr.size(0)
       #curr_batch_sz1 = imgs_tf_1.size(0)
       #curr_batch_sz2 = imgs_tf_2.size(0)
-      #if i % 10 == 0:
-      #  print("ith features input batch_sz: " + str(i) + ' ' + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
+      if i % 10 == 0:
+        print("ith features input batch_sz: " + str(i) + ' ' + str(curr_batch_sz))
       imgs_curr = sobel_process(imgs_curr, config.include_rgb)
       #imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
       #imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
