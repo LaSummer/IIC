@@ -135,8 +135,6 @@ class ReassignedDataset(data.Dataset):
     """
 
     def __init__(self, image_indexes, pseudolabels, dataset, transform=None):
-        print(dataset[0])
-        print(dataset[0])
         self.imgs = self.make_dataset(image_indexes, pseudolabels, dataset)
         self.transform = transform
 
