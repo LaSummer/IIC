@@ -107,6 +107,7 @@ def main():
                                                    str(config.old_model_ind)),
                                       "config.pickle")
   print("Loading old features config from: %s" % reloaded_config_path)
+  sys.stdout.flush()
   with open(reloaded_config_path, "rb") as config_f:
     old_config = pickle.load(config_f)
     assert (old_config.model_ind == config.old_model_ind)
@@ -167,6 +168,7 @@ def main():
                   include_rgb=old_config.include_rgb,
                   penultimate_features=config.penultimate_features)
   print("dlen: %d" % dlen)
+  sys.stdout.flush()
 
   assert (config.arch == "SupHead5")
   net = SupHead5(net_features, dlen=dlen, gt_k=old_config.gt_k)
