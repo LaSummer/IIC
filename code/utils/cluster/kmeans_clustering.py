@@ -135,7 +135,8 @@ class ReassignedDataset(data.Dataset):
     """
 
     def __init__(self, image_indexes, pseudolabels, dataset, transform=None):
-        print(dataset)
+        print(dataset[0])
+        print(dataset[0])
         self.imgs = self.make_dataset(image_indexes, pseudolabels, dataset)
         self.transform = transform
 
@@ -143,7 +144,7 @@ class ReassignedDataset(data.Dataset):
         label_to_idx = {label: idx for idx, label in enumerate(set(pseudolabels))}
         images = []
         for j, idx in enumerate(image_indexes):
-            img = dataset.data[idx]
+            img = dataset[idx][0]
             pseudolabel = label_to_idx[pseudolabels[j]]
             images.append((img, pseudolabel))
         return images

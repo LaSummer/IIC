@@ -284,7 +284,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   # 1. get kmeans_use_feature:
   print('Start compute features:')
-  features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
+  #features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
+  features = np.zeros((100000, 512), dtype='float32')
   print("computed feature shape:", features.shape)
 
   # 2. cluster the features using kmeans
