@@ -175,6 +175,7 @@ if config.restart:
 
   config.epoch_loss = config.epoch_loss[:(next_epoch - 1)]
   config.epoch_loss_no_lamb = config.epoch_loss_no_lamb[:(next_epoch - 1)]
+  config.epoch_loss_kmean = config.epoch_loss_kmean[:(next_epoch - 1)]
 else:
   config.epoch_acc = []
   config.epoch_avg_subhead_acc = []
@@ -182,6 +183,7 @@ else:
 
   config.epoch_loss = []
   config.epoch_loss_no_lamb = []
+  config.epoch_loss_kmean = []
 
   _ = cluster_eval(config, net,
                    mapping_assignment_dataloader=mapping_assignment_dataloader,
@@ -192,7 +194,7 @@ else:
   sys.stdout.flush()
   next_epoch = 1
 
-fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
+fig, axarr = plt.subplots(5, sharex=False, figsize=(20, 20))
 
 # Train ------------------------------------------------------------------------
 deepcluster = kclustering.Kmeans(config.output_k)
@@ -283,13 +285,14 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   avg_loss = 0.
   avg_loss_no_lamb = 0.
+  avg_loss_kmean = 0.
   avg_loss_count = 0
   # generate and assign pseudo labels for the whole dataset (including origin and transformed dataset)
 
   # 1. get kmeans_use_feature:
   print('Start compute features:')
-  #features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
-  features = np.zeros((100000, 512), dtype='float32')
+  features = compute_features(dataloaders, net, 300000) #TODO: change type of dataset_imgs
+  #features = np.zeros((100000, 512), dtype='float32')
   print("computed feature shape:", features.shape)
 
   # 2. cluster the features using kmeans
@@ -392,12 +395,17 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     avg_loss += avg_loss_batch.item()
     avg_loss_no_lamb += avg_loss_no_lamb_batch.item()
+    avg_loss_kmean += avg_kmeans_loss.item()
     avg_loss_count += 1
-    if itern >= 10 or e_i > 1:
-      total_loss = avg_loss_batch + 0.001*avg_kmeans_loss
-    else:
+
+    if avg_loss_batch.item() <= -0.1 and avg_loss_batch.item() >= -1:
+      total_loss = avg_loss_batch + 0.005*avg_kmeans_loss
+    elif avg_loss_batch.item() > -0.1:
       total_loss = avg_loss_batch
+    else:
+      total_loss = avg_loss_batch + 0.05*avg_kmeans_loss
     #avg_loss_batch.backward()
+    
     total_loss.backward()
 
     optimiser.step()
@@ -418,9 +426,11 @@ for e_i in xrange(next_epoch, config.num_epochs):
     pass
   avg_loss = float(avg_loss / avg_loss_count)
   avg_loss_no_lamb = float(avg_loss_no_lamb / avg_loss_count)
+  avg_loss_kmean = float((avg_loss_kmean) / avg_loss_count)
 
   config.epoch_loss.append(avg_loss)
   config.epoch_loss_no_lamb.append(avg_loss_no_lamb)
+  config.epoch_loss_kmean.append(avg_loss_kmean)
 
   is_best = cluster_eval(config, net,
                          mapping_assignment_dataloader=mapping_assignment_dataloader,
@@ -445,6 +455,10 @@ for e_i in xrange(next_epoch, config.num_epochs):
   axarr[3].clear()
   axarr[3].plot(config.epoch_loss_no_lamb)
   axarr[3].set_title("Loss no lamb")
+
+  axarr[4].clear()
+  axarr[4].plot(config.epoch_loss_kmean)
+  axarr[4].set_title("Kmean Loss")
 
   fig.tight_layout()
   fig.canvas.draw_idle()

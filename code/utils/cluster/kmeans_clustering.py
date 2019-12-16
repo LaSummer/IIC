@@ -24,11 +24,12 @@ class Kmeans(object):
 
         # cluster the data
         #I, loss = run_kmeans(xb, self.k, verbose)
-        #kmeans = KMeans(n_clusters=self.k).fit(data)
-        #flat_predictions = kmeans.labels_
+        kmeans = KMeans(n_clusters=self.k).fit(data)
+        flat_predictions = kmeans.labels_
 
         # pseudo clustering for debug
-        flat_predictions = [random.randint(0,139) for i in range(100000)]
+        #flat_predictions = [random.randint(0,139) for i in range(100000)]
+
         self.images_lists = [[] for i in range(self.k)]
         for i in range(len(data)):
             self.images_lists[flat_predictions[i]].append(i)
