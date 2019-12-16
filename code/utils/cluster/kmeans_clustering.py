@@ -36,7 +36,7 @@ class Kmeans(object):
         if verbose:
             print('k-means time: {0:.0f} s'.format(time.time() - end))
 
-        return 
+        return flat_predictions
 
 def preprocess_features(npdata, pca=256):
     """Preprocess an array of features.

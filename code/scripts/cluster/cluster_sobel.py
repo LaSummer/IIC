@@ -291,13 +291,13 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   # 2. cluster the features using kmeans
   print('Cluster the kmeans features')
-  deepcluster.cluster(features, verbose=True)
+  pseudo_labels = deepcluster.cluster(features, verbose=True)
 
   # 3. assign pseudo labels
-  print('Assign pseudo labels')
-  train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset_imgs) #TODO: change type of dataset_imgs
+  #print('Assign pseudo labels')
+  #train_dataset = kclustering.cluster_assign(deepcluster.images_lists, dataset_imgs) #TODO: change type of dataset_imgs
 
-  print("start reconstruct dataset:")
+  #print("start reconstruct dataset:")
   #dataloaders = reconstruct([train_dataset, dataset_imgs[1], dataset_imgs[2]])
 
   iterators = (d for d in dataloaders)
@@ -317,7 +317,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
     # pseudo labels from dc
 
     imgs_curr = tup[0][0]  # always the first
-    imgs_curr_target = tup[0][1]
+    #imgs_curr_target = tup[0][1]
 
     if i == 1:
       print("varyfing tup[0][0] shape:", tup[0][0].size())
@@ -341,6 +341,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
     curr_total_batch_sz = curr_batch_sz * config.num_dataloaders
     all_imgs = all_imgs[:curr_total_batch_sz, :, :, :]
     all_imgs_tf = all_imgs_tf[:curr_total_batch_sz, :, :, :]
+    #all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), -1)
+    #get pseudo labels
+    imgs_curr_target = torch.IntTensor(pseudo_labels[(i-1)*config.dataloader_batch_sz:i*config.dataloader_batch_sz])
     all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), -1)
     if i == 1:
       print("varyfing all_imgs_target shape:", all_imgs_target.size())
@@ -353,23 +356,28 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     avg_loss_batch = None  # avg over the heads
     avg_loss_no_lamb_batch = None
+    avg_kmeans_loss = None 
     for i in xrange(config.num_sub_heads):
       loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i], lamb=config.lamb)
+      kloss = kmeans_crit(x_outs[i], all_imgs_tf)
       if avg_loss_batch is None:
         avg_loss_batch = loss
         avg_loss_no_lamb_batch = loss_no_lamb
+        avg_kmeans_loss = avg_kmeans_loss
       else:
         avg_loss_batch += loss
         avg_loss_no_lamb_batch += loss_no_lamb
+        avg_kmeans_loss += avg_kmeans_loss
 
     avg_loss_batch /= config.num_sub_heads
     avg_loss_no_lamb_batch /= config.num_sub_heads
+    avg_kmeans_loss /= config.num_sub_heads
 
     if ((b_i % 100) == 0) or (e_i == next_epoch):
-      print("Model ind %d epoch %d batch: %d avg loss %f avg loss no lamb %f "
+      print("Model ind %d epoch %d batch: %d avg loss %f avg loss no lamb %f avg kloss %f"
             "time %s" % \
             (config.model_ind, e_i, b_i, avg_loss_batch.item(),
-             avg_loss_no_lamb_batch.item(), datetime.now()))
+             avg_loss_no_lamb_batch.item(), avg_kmeans_loss.item(), datetime.now()))
       sys.stdout.flush()
 
     if not np.isfinite(avg_loss_batch.item()):
