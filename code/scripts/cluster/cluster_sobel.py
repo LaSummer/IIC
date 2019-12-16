@@ -226,6 +226,9 @@ def compute_features(dataloaders, net, N):
     iterators = (d for d in dataloaders)
     i = 0
     print("LENGTH OF DATASET: ", N)
+    print("LENGTH OF DATALOADER0: ", len(dataloaders[0]))
+    print("LENGTH OF DATALOADER1: ", len(dataloaders[1]))
+    print("LENGTH OF DATALOADER2: ", len(dataloaders[2]))
     for tup in itertools.izip(*iterators):
       imgs_curr = tup[0][0].cuda()  # always the first
       imgs_tf_1 = tup[1][0].cuda()
@@ -234,7 +237,7 @@ def compute_features(dataloaders, net, N):
       curr_batch_sz1 = imgs_tf_1.size(0)
       curr_batch_sz2 = imgs_tf_2.size(0)
       if i % 10 == 0:
-        print("features input batch_sz: " + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
+        print("ith features input batch_sz: " + str(i) + ' ' + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
       imgs_curr = sobel_process(imgs_curr, config.include_rgb)
       imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
       imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
