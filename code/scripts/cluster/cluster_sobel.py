@@ -361,8 +361,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
       loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i], lamb=config.lamb)
       if itern == 1 and i == 0:
         print("varifying x_out[0] size:", x_outs[i].size())
-        print("varifying all_imgs_tf size", imgs_curr_target.long().size())
-      kloss = kmeans_crit(x_outs[i], imgs_curr_target.long())
+        print("varifying all_imgs_target size", all_imgs_target.long().size())
+      kloss = kmeans_crit(x_outs[i], all_imgs_target.long())
       if avg_loss_batch is None:
         avg_loss_batch = loss
         avg_loss_no_lamb_batch = loss_no_lamb
