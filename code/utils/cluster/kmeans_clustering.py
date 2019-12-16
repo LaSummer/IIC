@@ -28,7 +28,7 @@ class Kmeans(object):
         #flat_predictions = kmeans.labels_
 
         # pseudo clustering for debug
-        flat_predictions = [random.randint(0,99) for i in range(100000)]
+        flat_predictions = [random.randint(0,139) for i in range(100000)]
         self.images_lists = [[] for i in range(self.k)]
         for i in range(len(data)):
             self.images_lists[flat_predictions[i]].append(i)
@@ -143,6 +143,7 @@ class ReassignedDataset(data.Dataset):
         images = []
         for j, idx in enumerate(image_indexes):
             img = dataset[idx][0]
+            print("varyfying constructed image shape:", img.shape)
             pseudolabel = label_to_idx[pseudolabels[j]]
             images.append((img, pseudolabel))
         return images

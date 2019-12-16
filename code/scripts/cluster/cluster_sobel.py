@@ -11,6 +11,7 @@ import matplotlib
 import numpy as np
 import torch
 import faiss
+import torch.nn as nn
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -151,6 +152,8 @@ optimiser = get_opt(config.opt)(net.module.parameters(), lr=config.lr)
 if config.restart:
   optimiser.load_state_dict(
     torch.load(os.path.join(config.out_dir, opt_name)))
+  
+kmeans_crit = nn.CrossEntropyLoss().cuda()
 
 # Results ----------------------------------------------------------------------
 
@@ -298,8 +301,10 @@ for e_i in xrange(next_epoch, config.num_epochs):
   dataloaders = reconstruct([train_dataset, dataset_imgs[1], dataset_imgs[2]])
 
   iterators = (d for d in dataloaders)
-
+  
+  i = 0
   for tup in itertools.izip(*iterators):
+    i += 1
     net.module.zero_grad()
 
     # one less because this is before sobel
@@ -309,8 +314,16 @@ for e_i in xrange(next_epoch, config.num_epochs):
     all_imgs_tf = torch.zeros(config.batch_sz, config.in_channels - 1,
                               config.input_sz,
                               config.input_sz).cuda()
+    # pseudo labels from dc
+    all_imgs_target = torch.zeros(config.batch_sz, 1).cuda()
 
     imgs_curr = tup[0][0]  # always the first
+    imgs_curr_target = tup[0][1]
+
+    if i == 1:
+      print("varyfing tup[0][0] shape:", tup[0][0].size())
+      print("varyfing tup[0][0] shape:", tup[0][1].size())
+
     curr_batch_sz = imgs_curr.size(0)
     for d_i in xrange(config.num_dataloaders):
       imgs_tf_curr = tup[1 + d_i][0]  # from 2nd to last
@@ -320,6 +333,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
       actual_batch_end = actual_batch_start + curr_batch_sz
       all_imgs[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_curr.cuda()
+      all_imgs_target[actual_batch_start:actual_batch_end] = imgs_curr_target.cuda()
       all_imgs_tf[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_tf_curr.cuda()
 
