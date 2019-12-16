@@ -271,8 +271,6 @@ for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
   sys.stdout.flush()
 
-  iterators = (d for d in dataloaders)
-
   b_i = 0
   if e_i in config.lr_schedule:
     optimiser = update_lr(optimiser, lr_mult=config.lr_mult)
@@ -299,6 +297,8 @@ for e_i in xrange(next_epoch, config.num_epochs):
   print("start reconstruct dataset:")
   dataloaders = reconstruct(train_dataset)
 
+  iterators = (d for d in dataloaders)
+  
   for tup in itertools.izip(*iterators):
     net.module.zero_grad()
 
