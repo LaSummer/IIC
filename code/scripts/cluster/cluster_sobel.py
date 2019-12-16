@@ -192,7 +192,7 @@ fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 deepcluster = kclustering.Kmeans(config.output_k)
 
 def reconstruct(train_dataset):
-  return train_dataset
+  # return train_dataset
   new_dataloaders = []
   for _, dataset in enumerate(train_dataset):
     new_dataloaders.append(
@@ -298,7 +298,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   dataloaders = reconstruct(train_dataset)
 
   iterators = (d for d in dataloaders)
-  
+
   for tup in itertools.izip(*iterators):
     net.module.zero_grad()
 
@@ -311,6 +311,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
                               config.input_sz).cuda()
 
     imgs_curr = tup[0][0]  # always the first
+    imgs_curr_pseudo
     curr_batch_sz = imgs_curr.size(0)
     for d_i in xrange(config.num_dataloaders):
       imgs_tf_curr = tup[1 + d_i][0]  # from 2nd to last
