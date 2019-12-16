@@ -228,53 +228,50 @@ def compute_features(dataloaders, net, N):
     i = 0
     print("LENGTH OF DATASET: ", N)
     print("LENGTH OF DATALOADER0: ", len(dataloaders[0]))
-    print("LENGTH OF DATALOADER1: ", len(dataloaders[1]))
-    print("LENGTH OF DATALOADER2: ", len(dataloaders[2]))
+    #print("LENGTH OF DATALOADER1: ", len(dataloaders[1]))
+    #print("LENGTH OF DATALOADER2: ", len(dataloaders[2]))
     for tup in itertools.izip(*iterators):
       imgs_curr = tup[0][0].cuda()  # always the first
-      imgs_tf_1 = tup[1][0].cuda()
-      imgs_tf_2 = tup[2][0].cuda()
+      #imgs_tf_1 = tup[1][0].cuda()
+      #imgs_tf_2 = tup[2][0].cuda()
       curr_batch_sz = imgs_curr.size(0)
-      curr_batch_sz1 = imgs_tf_1.size(0)
-      curr_batch_sz2 = imgs_tf_2.size(0)
-      if i % 10 == 0:
-        print("ith features input batch_sz: " + str(i) + ' ' + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
+      #curr_batch_sz1 = imgs_tf_1.size(0)
+      #curr_batch_sz2 = imgs_tf_2.size(0)
+      #if i % 10 == 0:
+      #  print("ith features input batch_sz: " + str(i) + ' ' + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
       imgs_curr = sobel_process(imgs_curr, config.include_rgb)
-      imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
-      imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
+      #imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
+      #imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
 
       x_outs = net(imgs_curr, kmeans_use_features=True,)[0].data.cpu().numpy()
-      x_tf_1_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
-      x_tf_2_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
+      #x_tf_1_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
+      #x_tf_2_outs = net(imgs_tf_1, kmeans_use_features=True,)[0].data.cpu().numpy()
       if i == 0:
         features1 = np.zeros((N/3, x_outs.shape[1]), dtype='float32')
-        features2 = np.zeros((N/3, x_tf_1_outs.shape[1]), dtype='float32')
-        features3 = np.zeros((N/3, x_tf_2_outs.shape[1]), dtype='float32')
+        #features2 = np.zeros((N/3, x_tf_1_outs.shape[1]), dtype='float32')
+        #features3 = np.zeros((N/3, x_tf_2_outs.shape[1]), dtype='float32')
       x_outs = x_outs.astype('float32')
-      x_tf_1_outs = x_tf_1_outs.astype('float32')
-      x_tf_2_outs = x_tf_2_outs.astype('float32')
+      #x_tf_1_outs = x_tf_1_outs.astype('float32')
+      #x_tf_2_outs = x_tf_2_outs.astype('float32')
       if curr_batch_sz == config.dataloader_batch_sz:
         features1[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_outs
-        features2[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_1_outs
-        features3[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_2_outs
+        #features2[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_1_outs
+        #features3[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_2_outs
       else:
         # special treatment for final batch
         features1[i * curr_batch_sz:] = x_outs
-        features2[i * curr_batch_sz:] = x_tf_1_outs
-        features3[i * curr_batch_sz:] = x_tf_2_outs
+        #features2[i * curr_batch_sz:] = x_tf_1_outs
+        #features3[i * curr_batch_sz:] = x_tf_2_outs
       i += 1
     
     net.train()
-    return np.concatenate((features1, features2, features3))
+    return features1
 
 for e_i in xrange(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
   sys.stdout.flush()
 
   iterators = (d for d in dataloaders)
-
-  test_f = np.zeros((1000, 512), dtype='float32')
-  kclustering_loss = deepcluster.cluster(test_f, verbose=True)
 
   b_i = 0
   if e_i in config.lr_schedule:
@@ -292,7 +289,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   # 2. cluster the features using kmeans
   print('Cluster the kmeans features')
-  kclustering_loss = deepcluster.cluster(features, verbose=True)
+  deepcluster.cluster(features, verbose=True)
 
   # 3. assign pseudo labels
   print('Assign pseudo labels')

@@ -1,4 +1,5 @@
 import faiss
+from sklearn.cluster import KMeans
 import numpy as np
 import time
 import torchvision.transforms as transforms
@@ -21,15 +22,17 @@ class Kmeans(object):
         xb = preprocess_features(data)
 
         # cluster the data
-        I, loss = run_kmeans(xb, self.k, verbose)
+        #I, loss = run_kmeans(xb, self.k, verbose)
+        kmeans = KMeans(n_clusters=self.k).fit(data)
+        flat_predictions = kmeans.labels_
         self.images_lists = [[] for i in range(self.k)]
         for i in range(len(data)):
-            self.images_lists[I[i]].append(i)
+            self.images_lists[flat_predictions[i]].append(i)
 
         if verbose:
             print('k-means time: {0:.0f} s'.format(time.time() - end))
 
-        return loss
+        return 
 
 def preprocess_features(npdata, pca=256):
     """Preprocess an array of features.
