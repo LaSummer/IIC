@@ -390,8 +390,12 @@ for e_i in xrange(next_epoch, config.num_epochs):
     avg_loss += avg_loss_batch.item()
     avg_loss_no_lamb += avg_loss_no_lamb_batch.item()
     avg_loss_count += 1
-
-    avg_loss_batch.backward()
+    if itern >= 10 or e_i > 1:
+      total_loss = avg_loss_batch + 0.001*avg_kmeans_loss
+    else:
+      total_loss = avg_loss_batch
+    #avg_loss_batch.backward()
+    total_loss.backward()
 
     optimiser.step()
 
