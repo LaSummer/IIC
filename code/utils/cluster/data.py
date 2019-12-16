@@ -340,7 +340,7 @@ def _create_dataloaders(config, dataset_class, tf1, tf2,
   flatten_dataset_imgs = ConcatDataset(dataset_imgs)
   flatten_dataloaders = torch.utils.data.DataLoader(
     flatten_dataset_imgs,
-    batch_size=config.batch_size/config.num_dataloaders,
+    batch_size=config.batch_sz/config.num_dataloaders,
     num_workers=0,
   )
 
