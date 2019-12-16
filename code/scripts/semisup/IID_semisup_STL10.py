@@ -117,7 +117,7 @@ def main():
   if config.new_batch_sz == -1:
     config.new_batch_sz = old_config.batch_sz
 
-  #fig, axarr = plt.subplots(2, sharex=False, figsize=(20, 20))
+  fig, axarr = plt.subplots(2, sharex=False, figsize=(20, 20))
 
   # Data -----------------------------------------------------------------------
 
