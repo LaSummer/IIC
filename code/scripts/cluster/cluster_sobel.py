@@ -202,9 +202,9 @@ def reconstruct(train_dataset):
       torch.utils.data.DataLoader(
         dataset,
         batch_size=config.dataloader_batch_sz,
-        # shuffle=shuffle,
-        # num_workers=0,
-        # drop_last=False
+        shuffle=False,
+        num_workers=0,
+        drop_last=False
       )
     )
   return new_dataloaders
@@ -315,14 +315,13 @@ for e_i in xrange(next_epoch, config.num_epochs):
                               config.input_sz,
                               config.input_sz).cuda()
     # pseudo labels from dc
-    all_imgs_target = torch.zeros(config.batch_sz, 1).cuda()
 
     imgs_curr = tup[0][0]  # always the first
     imgs_curr_target = tup[0][1]
 
     if i == 1:
       print("varyfing tup[0][0] shape:", tup[0][0].size())
-      print("varyfing tup[0][0] shape:", tup[0][1].size())
+      print("varyfing tup[0][1] shape:", tup[0][1].size())
 
     curr_batch_sz = imgs_curr.size(0)
     for d_i in xrange(config.num_dataloaders):
@@ -333,7 +332,6 @@ for e_i in xrange(next_epoch, config.num_epochs):
       actual_batch_end = actual_batch_start + curr_batch_sz
       all_imgs[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_curr.cuda()
-      all_imgs_target[actual_batch_start:actual_batch_end, :] = imgs_curr_target.cuda()
       all_imgs_tf[actual_batch_start:actual_batch_end, :, :, :] = \
         imgs_tf_curr.cuda()
 
@@ -343,6 +341,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
     curr_total_batch_sz = curr_batch_sz * config.num_dataloaders
     all_imgs = all_imgs[:curr_total_batch_sz, :, :, :]
     all_imgs_tf = all_imgs_tf[:curr_total_batch_sz, :, :, :]
+    all_imgs_target = torch.cat((imgs_curr_target, imgs_curr_target), 1)
+    if i == 1:
+      print("varyfing all_imgs_target shape:", all_imgs_target.size())
 
     all_imgs = sobel_process(all_imgs, config.include_rgb)
     all_imgs_tf = sobel_process(all_imgs_tf, config.include_rgb)

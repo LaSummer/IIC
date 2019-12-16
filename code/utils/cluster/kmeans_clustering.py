@@ -143,7 +143,8 @@ class ReassignedDataset(data.Dataset):
         images = []
         for j, idx in enumerate(image_indexes):
             img = dataset[idx][0]
-            print("varyfying constructed image shape:", img.shape)
+            if j == 0:
+                print("varyfying constructed image shape:", img.shape)
             pseudolabel = label_to_idx[pseudolabels[j]]
             images.append((img, pseudolabel))
         return images
