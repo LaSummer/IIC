@@ -302,9 +302,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
   iterators = (d for d in dataloaders)
   
-  i = 0
+  itern = 0
   for tup in itertools.izip(*iterators):
-    i += 1
+    itern += 1
     net.module.zero_grad()
 
     # one less because this is before sobel
@@ -319,7 +319,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
     imgs_curr = tup[0][0]  # always the first
     #imgs_curr_target = tup[0][1]
 
-    if i == 1:
+    if itern == 1:
       print("varyfing tup[0][0] shape:", tup[0][0].size())
       print("varyfing tup[0][1] shape:", tup[0][1].size())
 
@@ -359,6 +359,9 @@ for e_i in xrange(next_epoch, config.num_epochs):
     avg_kmeans_loss = None 
     for i in xrange(config.num_sub_heads):
       loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i], lamb=config.lamb)
+      if itern == 1 and i == 0:
+        print("varifying x_out[0] size:", x_outs[i].size())
+        print("varifying all_imgs_tf size", all_imgs_tf.long().size())
       kloss = kmeans_crit(x_outs[i], all_imgs_tf.long())
       if avg_loss_batch is None:
         avg_loss_batch = loss
