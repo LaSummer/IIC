@@ -224,14 +224,17 @@ def reconstruct_v2(train_dataset):
 def compute_features(dataloaders, net, N):
     net.eval()
     iterators = (d for d in dataloaders)
-    i =  0
+    i = 0
     print("LENGTH OF DATASET: ", N)
     for tup in itertools.izip(*iterators):
       imgs_curr = tup[0][0].cuda()  # always the first
       imgs_tf_1 = tup[1][0].cuda()
       imgs_tf_2 = tup[2][0].cuda()
       curr_batch_sz = imgs_curr.size(0)
-
+      curr_batch_sz1 = imgs_tf_1.size(0)
+      curr_batch_sz2 = imgs_tf_2.size(0)
+      if i % 10 == 0:
+        print("features input batch_sz: " + str(curr_batch_sz)+ ' '+str(curr_batch_sz1)+ ' '+str(curr_batch_sz2)+ ' ')
       imgs_curr = sobel_process(imgs_curr, config.include_rgb)
       imgs_tf_1 = sobel_process(imgs_tf_1, config.include_rgb)
       imgs_tf_2 = sobel_process(imgs_tf_2, config.include_rgb)
@@ -247,14 +250,14 @@ def compute_features(dataloaders, net, N):
       x_tf_1_outs = x_tf_1_outs.astype('float32')
       x_tf_2_outs = x_tf_2_outs.astype('float32')
       if curr_batch_sz == config.dataloader_batch_sz:
-          features1[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_outs
-          features2[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_1_outs
-          features3[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_2_outs
+        features1[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_outs
+        features2[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_1_outs
+        features3[i * curr_batch_sz: (i + 1) * curr_batch_sz] = x_tf_2_outs
       else:
-          # special treatment for final batch
-          features1[i * curr_batch_sz:] = x_outs
-          features2[i * curr_batch_sz:] = x_tf_1_outs
-          features3[i * curr_batch_sz:] = x_tf_2_outs
+        # special treatment for final batch
+        features1[i * curr_batch_sz:] = x_outs
+        features2[i * curr_batch_sz:] = x_tf_1_outs
+        features3[i * curr_batch_sz:] = x_tf_2_outs
       i += 1
     
     net.train()
