@@ -409,12 +409,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
     avg_loss_count += 1
 
     if e_i % 2 == 0:
-      if avg_loss_batch.item() <= -0.2 and avg_loss_batch.item() >= -1:
-        total_loss = avg_loss_batch + 0.05*avg_kmeans_loss
-      elif avg_loss_batch.item() > -0.2:
-        total_loss = avg_loss_batch
-      else:
-        total_loss = avg_loss_batch + 0.5*avg_kmeans_loss
+      total_loss = avg_kmeans_loss
     else:
       total_loss = avg_loss_batch
     #avg_loss_batch.backward()
