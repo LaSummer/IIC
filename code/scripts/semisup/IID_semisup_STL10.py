@@ -247,7 +247,7 @@ def main():
     avg_loss = 0.
     num_batches = len(train_loader)
     for i, (imgs, targets) in enumerate(train_loader):
-      if i > num_batches/10:
+      if i >= num_batches/10:
         print("use only 1/10 fold of the training data")
         break
       imgs = sobel_process(imgs.cuda(), old_config.include_rgb)
