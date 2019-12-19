@@ -1,4 +1,4 @@
-# Invariant Information Clustering for Unsupervised Image Classification and Segmentation
+# Combining Invariant Information Learning with K-means Clustering for Self-supervised Image Classification
 
 This repository contains PyTorch code for the the final project of Computer Vison for Jiahui Li (jl10005@nyu.edu) and Zimo Li (zl2521@nyu.edu). It's forked based on repository for [IIC paper](https://arxiv.org/abs/1807.06653).
 
